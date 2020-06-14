@@ -25,7 +25,10 @@ public class OmsUserDbListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        List<Player> receivers = player.getServer().getOnlinePlayers().stream().filter(ServerOperator::isOp).collect(Collectors.toList());
+
+        if(player.hasPermission("userdb.report.bypass")) return;
+
+        List<Player> receivers = player.getServer().getOnlinePlayers().stream().filter(p -> p.hasPermission("userdb.report.receive")).collect(Collectors.toList());
         try {
             OmsUserDb.getReportCountOfUser(player.getUniqueId()).thenAccept(result -> plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (result.count == 0) {

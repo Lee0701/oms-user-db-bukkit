@@ -9,8 +9,14 @@ commands:
   userdb:
     description: Search OMS UserDb
     usage: /userdb [search <username>/get <UUID/username>]
-    permission: userdb
+    permission: userdb.command
 permissions:
-  userdb:
+  userdb.command:
     description: userdb command
     default: op
+  userdb.alert.receive:
+    description: receive alert when a reported user joins
+    default: op
+  userdb.alert.bypass:
+    description: bypass being alerted
+    default: false
