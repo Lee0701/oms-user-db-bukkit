@@ -1,14 +1,15 @@
-package space.ourmc.userdb.bukkit.event;
+package space.ourmc.userdb.bukkit.listener;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.permissions.ServerOperator;
 import org.bukkit.plugin.Plugin;
 import space.ourmc.userdb.api.OmsUserDb;
 import space.ourmc.userdb.api.OmsUserDbException;
+import space.ourmc.userdb.bukkit.event.ReportedPlayerJoinEvent;
 
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -25,7 +26,6 @@ public class OmsUserDbListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-
         if(player.hasPermission("userdb.report.bypass")) return;
 
         List<Player> receivers = player.getServer().getOnlinePlayers().stream().filter(p -> p.hasPermission("userdb.report.receive")).collect(Collectors.toList());
@@ -40,6 +40,7 @@ public class OmsUserDbListener implements Listener {
                 receivers.forEach(receiver -> {
                     receiver.sendMessage(result.count + " report(s) found for " + ChatColor.YELLOW + player.getName());
                     receiver.sendMessage("Use " + ChatColor.AQUA + "/userdb get " + player.getName() + " for more details");
+                    Bukkit.getPluginManager().callEvent(new ReportedPlayerJoinEvent(player, result.count));
                 });
             })).exceptionally(throwable -> {
                 if (throwable instanceof CompletionException && throwable.getCause() instanceof OmsUserDbException) {
