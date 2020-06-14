@@ -25,38 +25,42 @@ public class OmsUserDbListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        if(player.hasPermission("userdb.report.bypass")) return;
+        if(plugin.getConfig().getBoolean("alert.enable")) {
+            Player player = event.getPlayer();
+            if(player.hasPermission("userdb.report.bypass")) return;
 
-        List<Player> receivers = player.getServer().getOnlinePlayers().stream().filter(p -> p.hasPermission("userdb.report.receive")).collect(Collectors.toList());
-        try {
-            OmsUserDb.getReportCountOfUser(player.getUniqueId()).thenAccept(result -> plugin.getServer().getScheduler().runTask(plugin, () -> {
-                if (result.count == 0) {
-                    receivers.forEach(receiver -> {
-                        receiver.sendMessage(ChatColor.GREEN + "No reports found for " + ChatColor.YELLOW + player.getName());
-                    });
-                    return;
-                }
-                receivers.forEach(receiver -> {
-                    receiver.sendMessage(result.count + " report(s) found for " + ChatColor.YELLOW + player.getName());
-                    receiver.sendMessage("Use " + ChatColor.AQUA + "/userdb get " + player.getName() + " for more details");
-                    Bukkit.getPluginManager().callEvent(new ReportedPlayerJoinEvent(player, result.count));
-                });
-            })).exceptionally(throwable -> {
-                if (throwable instanceof CompletionException && throwable.getCause() instanceof OmsUserDbException) {
-                    OmsUserDbException e = (OmsUserDbException) throwable.getCause();
-                    if (e.code == 404) {
-                        plugin.getServer().getScheduler().runTask(plugin, () -> {
-                            receivers.forEach(receiver -> {
-                                receiver.sendMessage(ChatColor.GREEN + "No reports found for " + ChatColor.YELLOW + player.getName());
-                            });
+            List<Player> receivers = player.getServer().getOnlinePlayers().stream().filter(p -> p.hasPermission("userdb.report.receive")).collect(Collectors.toList());
+            try {
+                OmsUserDb.getReportCountOfUser(player.getUniqueId()).thenAccept(result -> plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (result.count == 0) {
+                        receivers.forEach(receiver -> {
+                            receiver.sendMessage(ChatColor.GREEN + "No reports found for " + ChatColor.YELLOW + player.getName());
                         });
+                        return;
                     }
-                }
-                return null;
-            });
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+                    receivers.forEach(receiver -> {
+                        receiver.sendMessage(result.count + " report(s) found for " + ChatColor.YELLOW + player.getName());
+                        receiver.sendMessage("Use " + ChatColor.AQUA + "/userdb get " + player.getName() + " for more details");
+                        if(plugin.getConfig().getBoolean("alert.send-event")) {
+                            Bukkit.getPluginManager().callEvent(new ReportedPlayerJoinEvent(player, result.count));
+                        }
+                    });
+                })).exceptionally(throwable -> {
+                    if (throwable instanceof CompletionException && throwable.getCause() instanceof OmsUserDbException) {
+                        OmsUserDbException e = (OmsUserDbException) throwable.getCause();
+                        if (e.code == 404) {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                receivers.forEach(receiver -> {
+                                    receiver.sendMessage(ChatColor.GREEN + "No reports found for " + ChatColor.YELLOW + player.getName());
+                                });
+                            });
+                        }
+                    }
+                    return null;
+                });
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
         }
     }
 

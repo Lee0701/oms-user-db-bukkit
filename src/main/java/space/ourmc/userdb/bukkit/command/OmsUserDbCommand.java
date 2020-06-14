@@ -33,6 +33,11 @@ public final class OmsUserDbCommand implements CommandExecutor  {
             sender.sendMessage("Usage: /" + label + " [search <username>/get <UUID/username>]");
             return true;
         }
+        if(args[0].equalsIgnoreCase("reload")) {
+            sender.sendMessage(ChatColor.GREEN + "Reloading config...");
+            plugin.reloadConfig();
+            return true;
+        }
         if (args[0].equalsIgnoreCase("search")) {
             return search(sender, command, label, args);
         }

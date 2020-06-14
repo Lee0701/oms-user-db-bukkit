@@ -8,6 +8,7 @@ public final class OmsUserDbBukkit extends JavaPlugin  {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         getCommand("userdb").setExecutor(new OmsUserDbCommand(this));
         getServer().getPluginManager().registerEvents(new OmsUserDbListener(this), this);
         if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
