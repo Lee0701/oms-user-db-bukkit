@@ -29,6 +29,7 @@ public final class ReportUrlAlerter {
             public void onPacketSending(PacketEvent event) {
                 PacketContainer packet = event.getPacket();
                 WrappedChatComponent chat = packet.getChatComponents().read(0);
+                if(chat == null) return;
                 JsonElement json = new JsonParser().parse(chat.getJson());
                 if (!json.isJsonObject()) return;
                 JsonObject object = (JsonObject) json;
